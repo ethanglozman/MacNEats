@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mac N Eats Demo</title>
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background: #f0f3f7;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    #offers-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 16px;
+        width: 100%;
+        max-width: 1200px;
+    }
+
+    .offer {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .offer:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+
+    .title {
+        font-weight: 600;
+        font-size: 18px;
+        margin-bottom: 4px;
+    }
+
+    .restaurant {
+        color: #777;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .description {
+        font-size: 14px;
+        margin-bottom: 12px;
+        color: #555;
+        flex-grow: 1;
+    }
+
+    .price-status {
+        font-size: 14px;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+
+    .price-original {
+        text-decoration: line-through;
+        color: #999;
+        margin-right: 8px;
+    }
+
+    .price-discount {
+        color: #7A003C;
+        font-weight: bold;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 16px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-weight: 500;
+    }
+
+    button.reserve {
+        background: #7A003C;
+        color: #fff;
+        margin-top: auto;
+    }
+
+    button.reserve:hover {
+        background: #5c002f;
+    }
+
+    button.soldout {
+        background: #ccc;
+        color: #666;
+        cursor: not-allowed;
+        margin-top: auto;
+    }
+
+    #notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.7);
+        background: #7A003C;
+        color: #fff;
+        padding: 24px 36px;
+        border-radius: 30px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        font-weight: 600;
+        font-size: 18px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s ease;
+        z-index: 1000;
+    }
+
+    #notification.show {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    nav {
+        margin-bottom: 20px;
+    }
+
+    nav a {
+        margin: 0 10px;
+        text-decoration: none;
+        color: #7A003C;
+        font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+        #offers-container {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        #notification {
+            padding: 20px 28px;
+            font-size: 16px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<nav>
+    <button onclick="location.reload()">Home</button>
+    <button onclick="window.location.href='About.html'">About</button>
+</nav>
+
+<h1>Mac N Eats - McMaster Cafeterias</h1>
+<div id="offers-container"></div>
+
+<div id="notification"></div>
+
+<script>
+    const offers = [
+        { id: 1, title: "Spicy Chicken Wrap", description: "Grilled chicken, lettuce, sauce", priceOriginal: 8.99, priceDiscount: 5.49, restaurant: "Centro (MUSC)", available: 3 },
+        { id: 2, title: "Harvest Bowl", description: "Quinoa, roasted veggies, tahini", priceOriginal: 10.49, priceDiscount: 6.49, restaurant: "Bistro (IH)", available: 2 },
+        { id: 3, title: "Fruit & Yogurt Cup", description: "Greek yogurt with berries", priceOriginal: 6.29, priceDiscount: 3.79, restaurant: "Commons Market", available: 4 },
+        { id: 4, title: "Veggie Pizza Slice", description: "Fresh veggies, cheese blend", priceOriginal: 5.99, priceDiscount: 3.25, restaurant: "La Piazza (MUSC)", available: 0 },
+        { id: 5, title: "Pasta Alfredo", description: "Creamy alfredo with parmesan", priceOriginal: 9.99, priceDiscount: 5.99, restaurant: "Bistro (IH)", available: 2 },
+        { id: 6, title: "Chicken Caesar Salad", description: "Romaine, chicken, caesar dressing", priceOriginal: 8.99, priceDiscount: 5.50, restaurant: "Centro (MUSC)", available: 3 },
+        { id: 7, title: "Hummus Plate", description: "Hummus with pita & veggies", priceOriginal: 6.49, priceDiscount: 3.49, restaurant: "Commons Market", available: 6 }
+    ];
+
+    const notification = document.getElementById('notification');
+
+    function showNotification(message) {
+        notification.textContent = message;
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2500);
+    }
+
+    function renderOffers() {
+        const container = document.getElementById('offers-container');
+        container.innerHTML = '';
+        offers.forEach(offer => {
+            const div = document.createElement('div');
+            div.className = 'offer';
+            div.innerHTML = `
+                <div class="title">${offer.title}</div>
+                <div class="restaurant">${offer.restaurant}</div>
+                <div class="description">${offer.description}</div>
+                <div class="price-status">
+                    <span class="price-original">$${offer.priceOriginal.toFixed(2)}</span>
+                    <span class="price-discount">$${offer.priceDiscount.toFixed(2)}</span>
+                    ${offer.available > 0 ? `| ${offer.available} left` : '| Sold out'}
+                </div>
+            `;
+
+            const button = document.createElement('button');
+            if (offer.available > 0) {
+                button.className = 'reserve';
+                button.textContent = 'Reserve';
+                button.onclick = () => {
+                    offer.available--;
+                    showNotification(`🎉 You reserved '${offer.title}' from ${offer.restaurant}!`);
+                    renderOffers();
+                };
+            } else {
+                button.className = 'soldout';
+                button.textContent = 'Sold out';
+                button.disabled = true;
+            }
+
+            div.appendChild(button);
+            container.appendChild(div);
+        });
+    }
+
+    renderOffers();
+</script>
+
+</body>
+</html>
